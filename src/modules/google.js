@@ -50,6 +50,10 @@
 				if (p.options.force) {
 					p.qs.approval_prompt = 'force';
 				}
+
+				if (p.options.user_id) {
+					p.qs.user_id = p.options.user_id;
+				}
 			},
 
 			// API base URI
