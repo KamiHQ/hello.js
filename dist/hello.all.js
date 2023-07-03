@@ -3871,7 +3871,7 @@ if (typeof chrome === 'object' && typeof chrome.extension === 'object') {
 (function(hello) {
 
 	var contactsUrl = 'https://www.google.com/m8/feeds/contacts/default/full?v=3.0&alt=json&max-results=@{limit|1000}&start-index=@{start|1}';
-
+	alert("google v2");
 	hello.init({
 
 		google: {
@@ -3881,8 +3881,8 @@ if (typeof chrome === 'object' && typeof chrome.extension === 'object') {
 			// See: http://code.google.com/apis/accounts/docs/OAuth2UserAgent.html
 			oauth: {
 				version: 2,
-				auth: 'https://accounts.google.com/o/oauth2/auth?disallow_webview=true',
-				grant: 'https://accounts.google.com/o/oauth2/token'
+				auth: 'https://accounts.google.com/o/oauth2/v2/auth?disallow_webview=true',
+				grant: 'https://accounts.google.com/o/oauth2/v2/token'
 			},
 
 			// Authorization scopes
