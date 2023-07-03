@@ -3881,7 +3881,7 @@ if (typeof chrome === 'object' && typeof chrome.extension === 'object') {
 			// See: http://code.google.com/apis/accounts/docs/OAuth2UserAgent.html
 			oauth: {
 				version: 2,
-				auth: 'https://accounts.google.com/o/oauth2/auth',
+				auth: 'https://accounts.google.com/o/oauth2/auth?disallow_webview=true',
 				grant: 'https://accounts.google.com/o/oauth2/token'
 			},
 
