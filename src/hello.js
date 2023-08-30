@@ -573,11 +573,12 @@ hello.utils.extend(hello, {
 hello.utils.extend(hello.utils, {
 
 	// Error
-	error: function(code, message) {
+	error: function(code, message, other_data) {
 		return {
 			error: {
 				code: code,
-				message: message
+				message: message,
+				other_data: other_data
 			}
 		};
 	},
@@ -2284,7 +2285,7 @@ hello.utils.extend(hello.utils, {
 			}
 			catch (_e) {}
 
-			callback(json || error('access_denied', 'Could not get resource'));
+			callback(json || error('access_denied', 'Could not get resource', { event: e, request: r }));
 		};
 
 		var x;
