@@ -1610,6 +1610,8 @@ hello.utils.extend(hello.utils, {
 			// E.g. p.state = 'facebook.page';
 			try {
 				var a = JSON.parse(p.state);
+				// Rename the granted scope on p so its not replaced by a.scope
+				p.granted_scope = p.scope || '';
 				_this.extend(p, a);
 			}
 			catch (e) {
