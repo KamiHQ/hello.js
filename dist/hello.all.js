@@ -399,6 +399,21 @@ hello.utils.extend(hello, {
 			}
 		});
 
+		// Use a broadcast channel as an alternative to postMessage when window.parent/window.opener
+		// is not available. Affects Safari + iOS 18 at this time.
+		var broadcastChannel = new BroadcastChannel(callbackId)
+		broadcastChannel.onmessage = (event) => {
+			if (window[callbackId]) {
+				window[callbackId](event.data)
+			}
+		}
+
+		// Ensure channel is cleaned up
+		promise.then(
+			() => broadcastChannel.close(),
+			() => broadcastChannel.close()
+		)
+
 		var redirectUri = utils.url(opts.redirect_uri).href;
 
 		// May be a space-delimited list of multiple, complementary types
@@ -1734,6 +1749,13 @@ hello.utils.extend(hello.utils, {
 				}
 				catch (e) {
 					// Error thrown whilst executing parent callback
+				}
+
+				// On iOS 18 Safari we have lost the window.parent reference. Use the broadcast channel instead.
+				if (window.parent === window) {
+					var broadcastChannel = new BroadcastChannel(cb)
+					broadcastChannel.postMessage(str);
+					broadcastChannel.close();
 				}
 			}
 
