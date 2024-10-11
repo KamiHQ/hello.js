@@ -399,6 +399,23 @@ hello.utils.extend(hello, {
 			}
 		});
 
+		// Use a broadcast channel as an alternative to postMessage when window.parent/window.opener
+		// is not available. Affects Safari + iOS 18 on iPads at this time.
+		if ('BroadcastChannel' in self) {
+			var broadcastChannel = new BroadcastChannel(callbackId)
+			broadcastChannel.onmessage = (event) => {
+				if (window[callbackId]) {
+					window[callbackId](event.data)
+				}
+			}
+
+			// Ensure channel is cleaned up
+			promise.then(
+				() => broadcastChannel.close(),
+				() => broadcastChannel.close()
+			)
+		}
+
 		var redirectUri = utils.url(opts.redirect_uri).href;
 
 		// May be a space-delimited list of multiple, complementary types
@@ -1670,7 +1687,6 @@ hello.utils.extend(hello.utils, {
 		// (URI Fragments within 302 Location URI are lost over HTTPS)
 		// Loading the redirect.html before triggering the OAuth Flow seems to fix it.
 		else if ('oauth_redirect' in p) {
-
 			var url = decodeURIComponent(p.oauth_redirect);
 			if (isValidUrl(url)) {
 				location.assign(url);
@@ -1734,6 +1750,13 @@ hello.utils.extend(hello.utils, {
 				}
 				catch (e) {
 					// Error thrown whilst executing parent callback
+				}
+
+				// On iOS 18 Safari on iPad we may have lost the window.parent reference. Use the broadcast channel instead.
+				if (window.parent === window && 'BroadcastChannel' in self) {
+					var broadcastChannel = new BroadcastChannel(cb)
+					broadcastChannel.postMessage(str);
+					broadcastChannel.close();
 				}
 			}
 
