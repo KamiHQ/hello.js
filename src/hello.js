@@ -659,16 +659,28 @@ hello.utils.extend(hello.utils, {
 
 		// Set LocalStorage
 		var localStorage;
+		var usingFallback = false;
+		var fallbackReason = null;
 
 		while (a[++i]) {
 			try {
 				// In Chrome with cookies blocked, calling localStorage throws an error
 				localStorage = window[a[i]];
+
+				// Check if localStorage is null or undefined before attempting to use it
+				if (localStorage === null || localStorage === undefined) {
+					fallbackReason = 'localStorage is ' + (localStorage === null ? 'null' : 'undefined');
+					localStorage = null;
+					continue;
+				}
+
 				localStorage.setItem(prefix + i, i);
 				localStorage.removeItem(prefix + i);
 				break;
 			}
 			catch (e) {
+				// Capture the exception type and message
+				fallbackReason = e.name + ': ' + e.message;
 				localStorage = null;
 			}
 		}
@@ -676,6 +688,12 @@ hello.utils.extend(hello.utils, {
 		if (!localStorage) {
 
 			var cache = null;
+			usingFallback = true;
+
+			// If no specific reason was captured, set a generic one
+			if (!fallbackReason) {
+				fallbackReason = 'localStorage and sessionStorage unavailable';
+			}
 
 			localStorage = {
 				getItem: function(prop) {
@@ -729,7 +747,7 @@ hello.utils.extend(hello.utils, {
 		}
 
 		// Check if the browser support local storage
-		return function(name, value, days) {
+		var storeFunction = function(name, value, days) {
 
 			// Local storage
 			var json = get();
@@ -757,7 +775,25 @@ hello.utils.extend(hello.utils, {
 			return json || null;
 		};
 
+		// Expose storage status information
+		storeFunction.getStorageStatus = function() {
+			return {
+				usingFallback: usingFallback,
+				isPersistent: !usingFallback,
+				storageType: usingFallback ? 'cookie-memory-fallback' : 'localStorage',
+				reason: fallbackReason
+			};
+		};
+
+		return storeFunction;
+
 	})(),
+
+	// Get localStorage status
+	// Returns information about whether localStorage is available or using fallback
+	getLocalStorageStatus: function() {
+		return this.store.getStorageStatus();
+	},
 
 	// Create and Append new DOM elements
 	// @param node string
