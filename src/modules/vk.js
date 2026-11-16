@@ -14,9 +14,13 @@
 			},
 
 			// Authorization scopes
+			// See https://vk.com/dev/permissions
 			scope: {
-				basic: '',
 				email: 'email',
+				friends: 'friends',
+				photos: 'photos',
+				videos: 'video',
+				share: 'share',
 				offline_access: 'offline'
 			},
 
@@ -36,6 +40,7 @@
 			get: {
 				me: function(p, callback) {
 					p.query.fields = 'id,first_name,last_name,photo_max';
+					p.query.v = '5.131';
 					callback('users.get');
 				}
 			},

@@ -1,4 +1,7 @@
 (function(hello) {
+	// For APIs, once a version is no longer usable, any calls made to it will be defaulted to the next oldest usable version.
+	// So we explicitly state it.
+	var version = 'v2.9';
 
 	hello.init({
 
@@ -6,10 +9,10 @@
 
 			name: 'Facebook',
 
-			// SEE https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/v2.1
+			// SEE https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow
 			oauth: {
 				version: 2,
-				auth: 'https://www.facebook.com/dialog/oauth/',
+				auth: 'https://www.facebook.com/' + version + '/dialog/oauth/',
 				grant: 'https://graph.facebook.com/oauth/access_token'
 			},
 
@@ -20,21 +23,21 @@
 				share: 'user_posts',
 				birthday: 'user_birthday',
 				events: 'user_events',
-				photos: 'user_photos,user_videos',
-				videos: 'user_photos,user_videos',
+				photos: 'user_photos',
+				videos: 'user_videos',
 				friends: 'user_friends',
 				files: 'user_photos,user_videos',
 				publish_files: 'user_photos,user_videos,publish_actions',
 				publish: 'publish_actions',
 
 				// Deprecated in v2.0
-				// Create_event	: 'create_event',
+				// Create_event: 'create_event',
 
-				offline_access: 'offline_access'
+				offline_access: ''
 			},
 
 			// Refresh the access_token
-			refresh: true,
+			refresh: false,
 
 			login: function(p) {
 
@@ -44,21 +47,20 @@
 					p.qs.auth_type = 'reauthenticate';
 				}
 
-				// The facebook login window is a different size.
-				p.options.popup.width = 580;
-				p.options.popup.height = 400;
+				// Set the display value
+				p.qs.display = p.options.display || 'popup';
 			},
 
 			logout: function(callback, options) {
 				// Assign callback to a global handler
 				var callbackID = hello.utils.globalEvent(callback);
-				var redirect = encodeURIComponent(hello.settings.redirect_uri + '?' + hello.utils.param({callback:callbackID, result: JSON.stringify({force:true}), state: '{}'}));
+				var redirect = encodeURIComponent(hello.settings.redirect_uri + '?' + hello.utils.param({callback: callbackID, result: JSON.stringify({force: true}), state: '{}'}));
 				var token = (options.authResponse || {}).access_token;
 				hello.utils.iframe('https://www.facebook.com/logout.php?next=' + redirect + '&access_token=' + token);
 
 				// Possible responses:
-				// String URL	- hello.logout should handle the logout
-				// Undefined	- this function will handle the callback
+				// String URL - hello.logout should handle the logout
+				// Undefined - this function will handle the callback
 				// True - throw a success, this callback isn't handling the callback
 				// False - throw a error
 				if (!token) {
@@ -68,7 +70,7 @@
 			},
 
 			// API Base URL
-			base: 'https://graph.facebook.com/v2.4/',
+			base: 'https://graph.facebook.com/' + version + '/',
 
 			// Map GET requests
 			get: {

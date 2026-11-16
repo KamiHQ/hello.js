@@ -11,10 +11,6 @@ hello.init({
 			response_type: 'code'
 		},
 
-		scope: {
-			basic: ''
-		},
-
 		base: 'https://api.box.com/2.0/',
 
 		get: {
@@ -36,7 +32,7 @@ hello.init({
 
 			'me/files': function(o) {
 				if (Array.isArray(o)) {
-					return {data:o};
+					return {data: o};
 				}
 
 				return o;

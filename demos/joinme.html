@@ -4,7 +4,7 @@
 <script src="/adorn/adorn.js" async></script>
 
 <script src="client_ids.js"></script>
-<script src="../src/hello.polyfill.js"></script>
+
 <script src="../src/hello.js"></script>
 <script src="../src/modules/joinme.js"></script>
 
@@ -21,12 +21,12 @@ function login(network){
 	joinme.login().then(function(){
 
 		// get user profile data
-		joinme.api('/me', function(p) {
+		joinme.api('me').then(function(p) {
 			document.getElementById( network ).innerHTML = "Connected to "+ network +" as " + p.name;
 		});
 
 		// Get your upcoming meetings from joinme
-		joinme.api('/meetings', function(r) {
+		joinme.api('/meetings').then(function(r) {
 			if (r.meetings && r.meetings.length > 0)
 				document.getElementById('result').innerHTML = JSON.stringify(r.meetings,null,3);
 			else

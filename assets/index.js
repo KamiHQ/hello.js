@@ -3,6 +3,9 @@
  * @author Andrew Dodson
  */
 
+// Prevent global leaks
+(function(self) {
+
 //
 // The following properties pertain to helper objects when defining the tests
 //
@@ -511,6 +514,38 @@ var tests = [
 		}
 	},
 	{
+		title : "Get files in folder",
+		api : "api",
+		method : 'get',
+		path : 'me/files',
+		scope : ["files"],
+		data : {
+			parent : '[FOLDER_ID]'
+		},
+		setup : get_test_folder,
+		expected : {
+			data : [{
+				id : reg.string,
+				name : reg.name
+			}]
+		}
+	},
+	{
+		title : "Get file by ID",
+		api : "api",
+		method : 'get',
+		path : 'me/file',
+		scope : ["files"],
+		data : {
+			id : '[FILE_ID]'
+		},
+		setup : get_test_file,
+		expected : {
+			id : reg.string,
+			name : reg.name
+		}
+	},
+	{
 		title : "List folders",
 		api : "api",
 		method : 'get',
@@ -567,23 +602,6 @@ var tests = [
 		setup : get_test_folder,
 		expected : {
 			success : true
-		}
-	},
-	{
-		title : "Get files in folder",
-		api : "api",
-		method : 'get',
-		path : 'me/files',
-		scope : ["files"],
-		data : {
-			parent : '[FOLDER_ID]'
-		},
-		setup : get_test_folder,
-		expected : {
-			data : [{
-				id : reg.string,
-				name : reg.name
-			}]
 		}
 	},
 	{
@@ -666,12 +684,86 @@ var tests = [
 		expected : {
 			success : true
 		}
+	},
+
+	////////////////////////////////
+	// SCOPE
+	////////////////////////////////
+	{
+		title : "Default scope",
+		api : "scope",
+		method : "basic",
+		filter : scopeFilter
+	},
+	{
+		title : "Read Users Email",
+		api : "scope",
+		method : "email",
+		scope: ['email'],
+		filter : scopeFilter
+	},
+	{
+		title : "Read Friends List",
+		api : "scope",
+		method : "friends",
+		scope: ['friends'],
+		filter : scopeFilter
+	},
+	{
+		title : "Publish scope",
+		api : "scope",
+		method : "publish",
+		scope: ['publish'],
+		filter : scopeFilter
+	},
+	{
+		title : "Read users Photos and Albums",
+		api : "scope",
+		method : "photos",
+		scope: ['photos'],
+		filter : scopeFilter
+	},
+	{
+		title : "Read users Videos and Albums",
+		api : "scope",
+		method : "videos",
+		scope: ['videos'],
+		filter : scopeFilter
+	},
+	{
+		title : "Read Files",
+		api : "scope",
+		method : "files",
+		scope: ['files'],
+		filter : scopeFilter
+	},
+	{
+		title : "Publish Files Scope",
+		api : "scope",
+		method : "publish_files",
+		scope: ['publish_files'],
+		filter : scopeFilter
+	},
+	{
+		title : "Persist the tokens or acquire a Refresh Token for continued access",
+		api : "scope",
+		method : "offline_access",
+		scope: ['offline_access'],
+		filter : scopeFilter
 	}
 ];
 
 
 ///////////////////////////////////
 // BEFORE SETUPS
+
+function scopeFilter(test) {
+	var scope = hello.services[test.network].scope;
+
+	if (scope) {
+		return scope[test.method];
+	}
+}
 
 
 //
@@ -718,7 +810,8 @@ function get_test_photo(test, callback){
 
 function get_test_folder(test, callback){
 
-	if(!("id" in test.data)&&!("parent" in test.data)){
+
+	if ( !("id" in test.data && test.data.id.match(/\_ID\]$/)) && !("parent" in test.data && test.data.parent.match(/\_ID\]$/))) {
 		callback();
 		return;
 	}
@@ -901,12 +994,12 @@ function Test(test,network,parent){
 				test.response(r);
 
 				test.status(b?'success':'failure');
-				
+
 				if(callback&&typeof(callback)==='function'){
 					callback.call(test);
 				}
 			};
-			
+
 			if(test.method === 'login'){
 				test.request( hello(network).login(test.data,cb) );
 			}
@@ -981,7 +1074,11 @@ function Provider(network){
 		});
 	};
 	this.login = function(){
-		hello.login(network, {scope: model.checkedScopes() });
+		hello.login(network, {scope: model.checkedScopes() }).then(function() {
+			console.log('Logged in to ' + network);
+		}, function(e) {
+			console.error('Failed to login to ' + network, e);
+		});
 	};
 	this.logout = function(){
 		this.online(false);
@@ -990,7 +1087,7 @@ function Provider(network){
 	this.online = ko.observable(false);
 }
 
-var model = new (function(){
+self.model = new (function(){
 	this.networks = ko.observableArray([]);
 	this.tests = ko.observableArray([]);
 	this.checkedScopes = ko.observableArray([]);
@@ -1000,6 +1097,9 @@ var model = new (function(){
 		});
 	};
 	this.scopes = ko.observableArray([]);
+	this.hasConnected = ko.computed(function() {
+		return ko.utils.arrayFilter(this.networks(), function(item) {return item.online();}).length > 0
+	}, this);
 });
 
 ko.utils.arrayForEach( tests, function(test){
@@ -1112,7 +1212,7 @@ function Dictionary(data) {
     this.removeItem = function(item) {
         this.items.remove(item);
     }.bind(this);
-        
+
     this.itemsAsObject = ko.dependentObservable(function() {
         var result = {};
         ko.utils.arrayForEach(this.items(), function(item) {
@@ -1171,7 +1271,7 @@ function _indexOf(a,s){
 
 
 
-function getText(path, callback){
+self.getText = function getText(path, callback){
 	// Load in the templates for API calls
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function(){
@@ -1186,3 +1286,24 @@ function getText(path, callback){
 	xhr.open("GET",path, true);
 	xhr.send();
 }
+
+// Home page specific
+if (document.getElementById('profile')) {
+	hello.on('auth.login', function(auth) {
+
+		// Call user information, for the given network
+		hello(auth.network).api('me').then(function(r) {
+			// Inject it into the container
+			var label = document.getElementById('profile_' + auth.network);
+			if (!label) {
+				label = document.createElement('div');
+				label.id = 'profile_' + auth.network;
+				document.getElementById('profile').appendChild(label);
+			}
+			label.innerHTML = '<img src="' + r.thumbnail + '" /> Hey ' + r.name;
+		});
+	});
+}
+
+
+})(window);
