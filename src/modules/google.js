@@ -6,13 +6,13 @@
 
 		google: {
 
-			name: 'Google Plus',
+			name: 'Google Sign-In',
 
 			// See: http://code.google.com/apis/accounts/docs/OAuth2UserAgent.html
 			oauth: {
 				version: 2,
-				auth: 'https://accounts.google.com/o/oauth2/auth',
-				grant: 'https://accounts.google.com/o/oauth2/token'
+				auth: 'https://accounts.google.com/o/oauth2/v2/auth',
+				grant: 'https://www.googleapis.com/oauth2/v4/token'
 			},
 
 			// Authorization scopes
@@ -23,10 +23,10 @@
 				events: '',
 				photos: 'https://picasaweb.google.com/data/',
 				videos: 'http://gdata.youtube.com',
-				friends: 'https://www.google.com/m8/feeds, https://www.googleapis.com/auth/plus.login',
 				files: 'https://www.googleapis.com/auth/drive.readonly',
 				publish: '',
 				publish_files: 'https://www.googleapis.com/auth/drive',
+				share: '',
 				create_event: '',
 				offline_access: ''
 			},
@@ -34,21 +34,20 @@
 			scope_delim: ' ',
 
 			login: function(p) {
-				if (p.qs.display === 'none') {
-					// Google doesn't like display=none
-					p.qs.display = '';
-				}
 
 				if (p.qs.response_type === 'code') {
 
 					// Let's set this to an offline access to return a refresh_token
 					p.qs.access_type = 'offline';
 				}
+				else if (p.qs.response_type.indexOf('id_token') > -1) {
+					p.qs.nonce = parseInt(Math.random() * 1e12, 10).toString(36);
+				}
 
 				// Reauthenticate
 				// https://developers.google.com/identity/protocols/
 				if (p.options.force) {
-					p.qs.approval_prompt = 'force';
+					p.qs.prompt = 'consent';
 				}
 			},
 
@@ -57,18 +56,15 @@
 
 			// Map GET requests
 			get: {
-				me: 'plus/v1/people/me',
+				me: 'oauth2/v3/userinfo?alt=json',
 
 				// Deprecated Sept 1, 2014
 				//'me': 'oauth2/v1/userinfo?alt=json',
 
 				// See: https://developers.google.com/+/api/latest/people/list
-				'me/friends': 'plus/v1/people/me/people/visible?maxResults=@{limit|100}',
 				'me/following': contactsUrl,
 				'me/followers': contactsUrl,
 				'me/contacts': contactsUrl,
-				'me/share': 'plus/v1/people/me/activities/public?maxResults=@{limit|100}',
-				'me/feed': 'plus/v1/people/me/activities/public?maxResults=@{limit|100}',
 				'me/albums': 'https://picasaweb.google.com/data/feed/api/user/default?alt=json&max-results=@{limit|100}&start-index=@{start|1}',
 				'me/album': function(p, callback) {
 					var key = p.query.id;
@@ -89,6 +85,7 @@
 						callback('drive/v2/files?q=%22@{parent|root}%22+in+parents+and+trashed=false&maxResults=@{limit|100}&supportsTeamDrives=true');
 					}
 				},
+				'me/file': 'drive/v2/files/@{id}?supportsTeamDrives=true',
 
 				// See: https://developers.google.com/drive/v2/reference/files/list
 				'me/folders': 'drive/v2/files?q=%22@{id|root}%22+in+parents+and+mimeType+=+%22application/vnd.google-apps.folder%22+and+trashed=false&maxResults=@{limit|100}&supportsTeamDrives=true',
@@ -125,11 +122,16 @@
 
 			// Map PATCH requests
 			patch: {
+				'me/file': 'drive/v2/files/@{id}?supportsTeamDrives=true',
 				'me/files': 'drive/v2/files/@{id}?supportsTeamDrives=true'
 			},
 
 			wrap: {
 				me: function(o) {
+					if (o.sub) {
+						o.id = o.sub;
+					}
+
 					if (o.id) {
 						o.last_name = o.family_name || (o.name ? o.name.familyName : null);
 						o.first_name = o.given_name || (o.name ? o.name.givenName : null);
@@ -176,7 +178,7 @@
 				}
 
 				// Add the authorization header as well
-				var token = p.query.access_token;
+				var token = p.authResponse && p.authResponse.access_token;
 				if (token) {
 					p.headers.Authorization = 'Bearer ' + token;
 				}
@@ -236,8 +238,12 @@
 	}
 
 	function formatPhotos(o) {
-		o.data = o.feed.entry.map(formatEntry);
-		delete o.feed;
+		if ('feed' in o) {
+			o.data = 'entry' in o.feed ? o.feed.entry.map(formatEntry) : [];
+			delete o.feed;
+		}
+
+		return o;
 	}
 
 	// Google has a horrible JSON API
@@ -254,7 +260,7 @@
 			return formatEntry(o.entry);
 		}
 
-		// New style: Google Drive & Plus
+		// New style: Google Drive
 		else if ('items' in o) {
 			o.data = o.items.map(formatItem);
 			delete o.items;
@@ -280,11 +286,11 @@
 			for (var i = 0; i < o.feed.entry.length; i++) {
 				var a = o.feed.entry[i];
 
-				a.id	= a.id.$t;
-				a.name	= a.title.$t;
+				a.id = a.id.$t;
+				a.name = a.title.$t;
 				delete a.title;
 				if (a.gd$email) {
-					a.email	= (a.gd$email && a.gd$email.length > 0) ? a.gd$email[0].address : null;
+					a.email = (a.gd$email && a.gd$email.length > 0) ? a.gd$email[0].address : null;
 					a.emails = a.gd$email;
 					delete a.gd$email;
 				}

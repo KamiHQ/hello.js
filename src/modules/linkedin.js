@@ -17,8 +17,14 @@
 			scope: {
 				basic: 'r_basicprofile',
 				email: 'r_emailaddress',
+				files: '',
 				friends: '',
-				publish: 'w_share'
+				photos: '',
+				publish: 'w_share',
+				publish_files: 'w_share',
+				share: '',
+				videos: '',
+				offline_access: ''
 			},
 			scope_delim: ' ',
 
@@ -26,9 +32,6 @@
 
 			get: {
 				me: 'people/~:(picture-url,first-name,last-name,id,formatted-name,email-address)',
-				'me/friends': 'people/~/connections?count=@{limit|500}',
-				'me/followers': 'people/~/connections?count=@{limit|500}',
-				'me/following': 'people/~/connections?count=@{limit|500}',
 
 				// See: http://developer.linkedin.com/documents/get-network-updates-and-statistics-api
 				'me/share': 'people/~/network/updates?count=@{limit|250}'
@@ -71,7 +74,7 @@
 				'me/like': like
 			},
 
-			del:{
+			del: {
 				'me/like': like
 			},
 

@@ -1,9 +1,26 @@
 
 # hello.js
 
+[![CDNJS](https://img.shields.io/cdnjs/v/hellojs.svg)](https://cdnjs.com/libraries/hellojs/)
+
 A client-side JavaScript SDK for authenticating with [OAuth2](http://tools.ietf.org/pdf/draft-ietf-oauth-v2-12.pdf) (and **OAuth1** with a [oauth proxy](#oauth-proxy)) web services and querying their REST APIs. HelloJS standardizes paths and responses to common APIs like Google Data Services, Facebook Graph and Windows Live Connect. It's **modular**, so that list is [growing](./modules). No more spaghetti code!
 
 
+## E.g.
+
+<div id="profile">
+<div data-bind="visible:false">See demo at <a href="https://adodson.com/hello.js/">https://adodson.com/hello.js/</a>.</div>
+<div data-bind="foreach:networks">
+<button data-bind="click:function(){ hello( name ).login();}, attr:{'class': 'zocial icon ' + name, title: 'Sign in to ' + displayName}" title="Sign in"></button>
+</div>
+<br />
+</div>
+<p data-bind="visible: hasConnected, text: 'Hey, we got your details, test done! Checkout below to see what else hello.js can do'"></p>
+
+## Try out the next version
+The `next` version is a modern rewrite of hellojs, please support this development in the `v2` branch.
+
+	npm i hellojs@next
 
 ## Features
 
@@ -16,7 +33,7 @@ Here are some more demos...
 			<th>Windows</th>
 			<th>Facebook</th>
 			<th>Google</th>
-			<th><a href="#helloapi">More..</th>
+			<th><a href="#helloapi">More..</a></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -91,26 +108,31 @@ Here are some more demos...
 - I have no knowledge of anything unlisted and would appreciate input.
 
 
-
 ## Install
 
-Download: [HelloJS](dist/hello.all.js) | [HelloJS (minified)](dist/hello.all.min.js)
+Download: [HelloJS](https://github.com/MrSwitch/hello.js/raw/main/dist/hello.all.js) | [HelloJS (minified)](https://github.com/MrSwitch/hello.js/raw/main/dist/hello.all.min.js)
 
-Compiled source, which combines all of the modules, can be obtained from [GitHub](https://github.com/MrSwitch/hello.js/tree/master/dist), and source files can be found in [Source](https://github.com/MrSwitch/hello.js/tree/master/src).
+Compiled source, which combines all of the modules, can be obtained from [GitHub](https://github.com/MrSwitch/hello.js/tree/main/dist), and source files can be found in [Source](https://github.com/MrSwitch/hello.js/tree/main/src).
 
-### Bower Package
+**Note:** Some services require OAuth1 or server-side OAuth2 authorization. In such cases, HelloJS communicates with an [OAuth Proxy](#oauth-proxy).
+
+### NPM
 
 ```bash
-# Install the package manager, bower
-npm install bower
+npm i hellojs
+```
 
-# Install hello
+At the present time only the bundled files in the `/dist/hello.*` support CommonJS. e.g. `let hello = require('hellojs/dist/hello.all.js')`.
+
+### Bower
+
+```bash
 bower install hello
 ```
 
 The [Bower](http://bower.io/) package shall install the aforementioned "/src" and "/dist" directories. The "/src" directory provides individual modules which can be packaged as desired.
 
-**Note:** Some services require OAuth1 or server-side OAuth2 authorization. In such cases, HelloJS communicates with an [OAuth Proxy](#oauth-proxy).
+
 
 ## Help &amp; Support
 
@@ -146,7 +168,7 @@ Register your application with at least one of the following networks. Ensure yo
 ### 2. Include Hello.js script in your page
 
 ```html
-<script class="pre" src="./dist/hello.all.js"></script>
+<script src="./dist/hello.all.js"></script>
 ```
 
 ### 3. Create the sign-in buttons
@@ -164,7 +186,7 @@ Let's define a simple function, which will load a user profile into the page aft
 hello.on('auth.login', function(auth) {
 
 	// Call user information, for the given network
-	hello(auth.network).api('/me').then(function(r) {
+	hello(auth.network).api('me').then(function(r) {
 		// Inject it into the container
 		var label = document.getElementById('profile_' + auth.network);
 		if (!label) {
@@ -260,7 +282,7 @@ hello.init({
 
 ## hello.login()
 
-
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter:'login' } }"></div>
 
 If a network string is provided: A consent window to authenticate with that network will be initiated. Else if no network is provided a prompt to select one of the networks will open. A callback will be executed if the user authenticates and or cancels the authentication flow.
 
@@ -313,7 +335,7 @@ If a network string is provided: A consent window to authenticate with that netw
 				<tr>
 					<td>redirect_uri</td>
 					<td><i>string</i></td>
-					<td><q><a href="redirect.html" target="_blank">redirect.html</a></q></td>
+					<td><q><a href="#redirect-page">Redirect Page</a></q></td>
 					<td>
 					A full or relative URI of a page which includes this script file hello.js</td>
 					<td>
@@ -345,6 +367,14 @@ If a network string is provided: A consent window to authenticate with that netw
 					<td><em>optional</em></td>
 					<td>See <code>hello.settings.popup</code></td>
 				</tr>
+				<tr>
+					<td>state</td>
+					<td><i>string</i></td>
+					<td><q>ijustsetthis</q></td>
+					<td>Honours the state parameter, by storing it within its own state object</td>
+					<td><em>optional</em></td>
+					<td></td>
+				</tr>
 			</table>
 		</td>
 	</tr>
@@ -370,9 +400,9 @@ hello('facebook').login().then(function() {
 
 ## hello.logout()
 
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter: 'logout' } }"></div>
 
-
-Remove all sessions or individual sessions.
+Remove all sessions or individual session.
 
 ### hello.logout([network] [, options] [, callback()])
 
@@ -455,9 +485,9 @@ hello('facebook').logout().then(function() {
 
 ## hello.getAuthResponse()
 
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter: 'getAuthResponse' } }"></div>
 
-
-Get the current status of the session. This is a synchronous request and does not validate any session cookies which may have expired.
+Get the current status of the session. This is a synchronous request and does not validate any session cookie which may have gone expired.
 
 ### hello.getAuthResponse(network)
 
@@ -496,13 +526,15 @@ alert((online(fb) ? 'Signed' : 'Not signed') + ' into Facebook, ' + (online(wl) 
 
 ## hello.api()
 
-
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter:'api' } }"></div>
 
 Make calls to the API for getting and posting data.
 
 ### hello.api([path], [method], [data], [callback(json)])
 
-`hello.api([path], [method], [data], [callback(json)]).then(successHandler, errorHandler)`.
+```
+hello.api([path], [method], [data], [callback(json)]).then(successHandler, errorHandler)
+```
 
 <table>
 	<tr>
@@ -520,9 +552,21 @@ Make calls to the API for getting and posting data.
 			<q>/me</q>,
 			<q>/me/friends</q>
 		</td>
-		<td>Path or URI of the resource. See <a href="#REST API">REST API</a>, Can be prefixed with the name of the service.</td>
+		<td>A relative path to the modules <code>base</code> URI, a full URI or a mapped path defined by the module - see <a href="https://adodson.com/hello.js#REST API">REST API</a>.</td>
 		<td>
 			<em>required</em>
+		</td>
+		<td>null</td>
+	</tr>
+	<tr>
+		<td>query</td>
+		<td><i>object</i></td>
+		<td>
+			<code>{name:<q>Hello</q>}</code>
+		</td>
+		<td>HTTP query string parameters.</td>
+		<td>
+			<em>optional</em>
 		</td>
 		<td>null</td>
 	</tr>
@@ -565,27 +609,6 @@ Make calls to the API for getting and posting data.
 		</td>
 	</tr>
 	<tr>
-		<td>callback</td>
-		<td><i>function</i></td>
-		<td>
-			<code>function(json){console.log(json);}</code>
-		</td>
-		<td>
-			A function to call with the body of the response returned in the first parameter as an object, else boolean false.
-		</td>
-		<td>
-			<em>optional</em>
-		</td>
-		<td>
-			<em>null</em>
-		</td>
-	</tr>
-
-	<tr>
-		<td colspan=6>More options (below) require putting the options into a 'key'=>'value' hash. I.e. <code>hello(network).api(options)</code></td>
-	</tr>
-
-	<tr>
 		<td>timeout</td>
 		<td><i>integer</i></td>
 		<td>
@@ -601,7 +624,26 @@ Make calls to the API for getting and posting data.
 			<em>60000</em>
 		</td>
 	</tr>
-
+	<tr>
+		<td>callback</td>
+		<td><i>function</i></td>
+		<td>
+			<code>function(json){console.log(json);}</code>
+		</td>
+		<td>
+			A function to call with the body of the response returned in the first parameter as an object, else boolean false.
+		</td>
+		<td>
+			<em>optional</em>
+		</td>
+		<td>
+			<em>null</em>
+		</td>
+	</tr>
+	<tr>
+		<td colspan='6'>More options (below) require putting the options into a 'key'=>'value' hash. I.e. <code>hello(network).api(options)</code>
+		</td>
+	</tr>
 	<tr>
 		<td>formatResponse</td>
 		<td><i>boolean</i></td>
@@ -636,7 +678,7 @@ Please see [demo of the global events](demos/events.html).
 
 ## hello.on()
 
-Bind a callback to an event. An event may be triggered by a change in user state or a change in some detail.
+Bind a callback to an event. The event may be triggered by any change in user state or a change in any detail.
 
 ### hello.on(event, callback)
 
@@ -651,6 +693,10 @@ Bind a callback to an event. An event may be triggered by a change in user state
 		<tr>
 			<td>auth</td>
 			<td>Triggered whenever session changes</td>
+		</tr>
+		<tr>
+			<td>auth.init</td>
+			<td>Triggered prior to requesting an authentication flow</td>
 		</tr>
 		<tr>
 			<td>auth.login</td>
@@ -678,7 +724,7 @@ hello.on('auth.login', sessionStart);
 
 ## hello.off()
 
-Remove a callback. Both event name and function must exist.
+Remove a callback. Both event name and function must co-exist.
 
 ### hello.off(event, callback)
 
@@ -686,7 +732,7 @@ Remove a callback. Both event name and function must exist.
 hello.off('auth.login', sessionStart);
 ```
 
-# Misc
+# Concepts
 
 ## Pagination, Limit and Next Page
 Responses which are a subset of the total results should provide a `response.paging.next` property. This can be plugged back into `hello.api` in order to get the next page of results.
@@ -724,48 +770,50 @@ The scope property defines which privileges an app requires from a network provi
 An app can specify multiple scopes, separated by commas - as in the example below.
 
 ```js
-hello('facebook').login({scope: 'friends,photos,publish'});
+hello('facebook').login({
+    scope: 'friends, photos, publish'
+});
 ```
 
-Scopes are tightly coupled with API requests, which will break if the session scope is missing or invalid. The best way to see this is next to the API paths in the [hello.api reference table](http://adodson.com/hello.js/#helloapi).
+Scopes are tightly coupled with API requests. Unauthorized error response from an endpoint will occur if the scope privileges have not been granted. Use the [hello.api reference table](http://adodson.com/hello.js/#helloapi) to explore the API and scopes.
 
-The table below illustrates some of the default scopes HelloJS exposes. Additional scopes may be added which are proprietary to a service, but be careful not to mix proprietary scopes with other services which don't know how to handle them.
-<table>
-	<thead>
-	<tr>
-		<th>Scope</th>
-		<th>Description</th>
-	</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<th><i>default</i></th>
-			<td>Read basic profile</td>
-		</tr>
-		<tr>
-			<th><q>friends</q></th>
-			<td>Read friends profiles</td>
-		</tr>
-		<tr>
-			<th><q>photos</q></th>
-			<td>Read users albums and photos</td>
-		</tr>
-		<tr>
-			<th><q>files</q></th>
-			<td>Read users files</td>
-		</tr>
-		<tr>
-			<th><q>publish</q></th>
-			<td>Publish status updates</td>
-		</tr>
-		<tr>
-			<th><q>publish_files</q></th>
-			<td>Publish photos and files</td>
-		</tr>
-	</tbody>
-</table>
+It's considered good practice to limit the use of scopes. The more unnecessary privileges you ask for the more likely users are going to drop off. If your app has many different sections, consider re-authorizing the user with different privileges as they go.
 
-It's good practice to limit the use of scopes and also to make users aware of why your app needs certain privileges. Try to update the permissions as a user delves further into your app. For example: If the user would like to share a link with a friend, include a button that the user has to click to trigger the hello.login with the 'friends' scope, and then the handler triggers the API call after authorization.
+HelloJS modules standardises popular scope names. However you can always use proprietary scopes, e.g. to access google spreadsheets: `hello('google').login({scope: 'https://spreadsheets.google.com/feeds'});`
+
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter:'scope' } }">See <a href="http://adodson.com/hello.js/#scope">Scope</a> for standardised scopes.</div>
+
+## Redirect Page
+Providers of the OAuth1/2 authorization flow must respect a Redirect URI parameter in the authorization request (also known as a Callback URL). E.g. `...&redirect_uri=http://mydomain.com/redirect.html&...`
+
+The `redirect_uri` is always a full URL. It must point to a Redirect document which will process the authorization response and set user session data. In order for an application to communicate with this document and set the session data, the origin of the document must match that of the application - this restriction is known as the same-origin security policy.
+
+A successful authorisation response will append the user credentials to the Redirect URI. e.g. `?access_token=12312&amp;expires_in=3600`. The Redirect document is responsible for interpreting the request and setting the session data.
+
+### Create a Redirect Page and URI
+
+In HelloJS the default value of `redirect_uri` is the current page. However its recommended that you explicitly set the `redirect_uri` to a dedicated page with minimal UI and page weight.
+
+Create an HTML page on your site which will be your redirect document. Include the HelloJS script e.g...
+
+```html
+<!doctype html>
+<script src="./hello.js"></script>;
+```
+
+Do add css animations incase there is a wait. **View Source** on [./redirect.html](./redirect.html) for an example.
+
+Then within your application script where you initiate HelloJS, define the Redirect URI to point to this page. e.g.
+
+```js
+hello.init({
+	facebook:client_id
+}, {
+	redirect_uri: '/redirect.html'
+});
+```
+
+Please note: The `redirect_uri` example above in `hello.init` is relative, it will be turned into an absolute path by HelloJS before being used.
 
 ## Error Handling
 
@@ -836,9 +884,9 @@ Services are added to HelloJS as "modules" for more information about creating y
 
 ## OAuth Proxy
 
-
-A list of the service providers OAuth* mechanisms is available at [Provider OAuth Mechanisms](http://adodson.com/hello.js/#oauth-proxy)
-
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter: 'oauth' } }">
+A list of the service providers OAuth* mechanisms is available at <a href="http://adodson.com/hello.js/#oauth-proxy">Provider OAuth Mechanisms</a>
+</div>
 
 For providers which support only OAuth1 or OAuth2 with Explicit Grant, the authentication flow needs to be signed with a secret key that may not be exposed in the browser. HelloJS gets round this problem by the use of an intermediary webservice defined by `oauth_proxy`. This service looks up the secret from a database and performs the handshake required to provision an `access_token`. In the case of OAuth1, the webservice also signs subsequent API requests.
 
@@ -859,6 +907,7 @@ hello.init(
 ```
 
 ### Enforce Explicit Grant
+
 Enforcing the OAuth2 Explicit Grant is done by setting `response_type=code` in [hello.login](#hellologin) options - or globally in [hello.init](#helloinit) options. E.g...
 
 ```javascript
@@ -868,12 +917,17 @@ hello(network).login({
 ```
 
 ## Refresh Access Token
+
 Access tokens provided by services are generally short lived - typically 1 hour. Some providers allow for the token to be refreshed in the background after expiry.
-A list of services which enable silent authentication after the Implicit Grant signin [Refresh access_token](http://adodson.com/hello.js/#refresh-access-token)
+
+<div data-bind="template: { name: 'tests-template', data: { test: $root, filter:'refresh' } }">A list of services which enable silent authentication after the Implicit Grant signin <a href="http://adodson.com/hello.js/#refresh-access-token">Refresh access_token</a>
+</div>
 
 Unlike Implicit grant; Explicit grant may return the `refresh_token`. HelloJS honors the OAuth2 refresh_token, and will also request a new access_token once it has expired.
 
+
 ### Bulletproof Requests
+
 A good way to design your app is to trigger requests through a user action, you can then test for a valid access token prior to making the API request with a potentially expired token.
 
 ```javascript
@@ -894,26 +948,39 @@ For a demo, or, if you're bundling up the library from `src/*` files, then pleas
 
 HelloJS targets all modern browsers.
 
-Polyfills are included in `src/hello.polyfill.js` this is to bring older browsers upto date. If you're using the resources located in `dist/` this is already bundled in. But if you're building from source you might like to first determine whether these polyfills are required, or if you're already supporting them etc...
-
 ## PhoneGap Support
 
 HelloJS can also be run on PhoneGap applications. Checkout the demo [hellojs-phonegap-demo](https://github.com/MrSwitch/hellojs-phonegap-demo)
 
-# Thankyou
+## Chrome Apps
 
-HelloJS relies on the these fantastic services for its development and deployment. Without which it would still be kicking around in a cave - not evolving very fast.
+**Demo** [hellojs-chromeapp-demo](https://github.com/MrSwitch/hellojs-chromeapp-demo)
 
+HelloJS module [src/hello.chromeapp.js](./src/hello.chromeapp.js) (also bundled in dist/*) shims the library to support the unique API's of the Chrome App environment (or Chrome Extension).
+
+
+### Chrome manifest.json prerequisites
+
+The `manifest.json` file must have the following permissions...
+
+```json
+	"permissions": [
+	    "identity",
+	    "storage",
+	    "https://*/"
+	],
+```
+
+# Credits
+
+HelloJS relies on these fantastic services for it's development and deployment, without which it would still be kicking around in a cave - not evolving very fast.
 
 - [BrowserStack](https://www.browserstack.com/) for providing a means to test across multiple devices.
-- [Github](https://github.com) for maintaining the repo and issue tracking.
-- [Travis](https://travis-ci.org/) for providing fantastic continuous integration.
-- ... and others i've forgotten to mention
 
 
-## Can i contribute?
+## Can I contribute?
 
-Yes, yes you can. Infact this isnt really free software, it comes with bugs documentation errors, more over it tracks thirdparty API's which just wont sit still. And its intended for everyone to understand, so if you dont understand something then its not fulfilling its goal.
+Yes, yes you can. In fact this isn't really free software, it comes with bugs and documentation errors. Moreover it tracks third party API's which just won't sit still. And it's intended for everyone to understand, so if you dont understand something then it's not fulfilling it's goal.
 
 ... otherwise give it a [star](https://github.com/MrSwitch/hello.js).
 
@@ -940,7 +1007,4 @@ python -m SimpleHTTPServer
 # 2. Then open the following URL in your web browser:
 # http://localhost:8000/tests/specs/index.html
 ```
-
-
-
 

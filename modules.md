@@ -1,8 +1,9 @@
 ---
 title: HelloJs Modules
+layout: default
 ---
-<link rel="stylesheet" href="/adorn/adorn.css" />
-<script src="/adorn/adorn.js" async></script>
+
+<link rel="source" href="modules.md"/>
 
 
 # HelloJS Modules
@@ -161,6 +162,11 @@ Modules are loaded into HelloJS using the hello.init() method, with a JSON objec
 							<td>grant</td>
 							<td>url</td>
 							<td>Path to get the Access token, OAuth2 only</td>
+						</tr>
+						<tr>
+							<td>response_type</td>
+							<td>string</td>
+							<td>Implicit (token) or Explicit (code) Grant flow</td>
 						</tr>
 					</tbody>
 				</table>

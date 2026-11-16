@@ -9,7 +9,10 @@
 				version: '1.0a',
 				auth: 'https://api.login.yahoo.com/oauth/v2/request_auth',
 				request: 'https://api.login.yahoo.com/oauth/v2/get_request_token',
-				token: 'https://api.login.yahoo.com/oauth/v2/get_token'
+				token: 'https://api.login.yahoo.com/oauth/v2/get_token',
+				// Yahoo requires the state param to be base 64 encoded, hence the flag base64_state is set to true for Yahoo.
+				// Else uri encoding is used for all the other providers.
+				base64_state: true
 			},
 
 			// Login handler
@@ -114,6 +117,13 @@
 
 	function formatFriend(contact) {
 		contact.id = null;
+
+		// #362: Reports of responses returning a single item, rather than an Array of items.
+		// Format the contact.fields to be an array.
+		if (contact.fields && !(contact.fields instanceof Array)) {
+			contact.fields = [contact.fields];
+		}
+
 		(contact.fields || []).forEach(function(field) {
 			if (field.type === 'email') {
 				contact.email = field.value;
